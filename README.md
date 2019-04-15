@@ -51,3 +51,6 @@ Put the print sentence in parantheses ()
 	
 5. All gis raster files should has cordinate system: GCS WGS 1984, if not then project files.
 
+6. Prepare the soil raster according to soil_class and type in soil_appendix_3layer.xlsx file.
+
+7. Prepare the land use land cover raster according to LULC_CLASS.xlsx file
