@@ -1,5 +1,5 @@
 # vic-auto
-This script generates soil parameter and vegetation parameter files for Variable Infiltration Capacity (VIC) Model
+This script generates soil parameter and vegetation parameter files for Variable Infiltration Capacity VIC Model
 Some useful files (rooting depth and soil appendix) are provided with docs. Use 3 layers files.
 
 Procedure to Follow:
