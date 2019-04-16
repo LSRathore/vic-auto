@@ -50,7 +50,7 @@ Put the print sentence in parantheses ()
 	
 		Change cell_h and cell _w that are cell height and cell width accordingly. These variables are in degree so use (0.01, 0.05 instead of 1km, 5km ...)
 	
-5. All gis raster files should has cordinate system: GCS WGS 1984, if not then project files.
+5. All gis raster files should have cordinate system: GCS WGS 1984, if not then project files.
 
 6. Prepare the soil raster according to soil_class and type in soil_appendix_3layer.xlsx file.
 
