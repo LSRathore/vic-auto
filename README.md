@@ -15,8 +15,7 @@ Procedure to Follow:
 
 	
 2. The script is written in python2.7 and it gives error with python 3 and advanced versions. 
-To use it in python3, change the all print commands (line:59, 66, 70, 83, 97, 110, 118, 124, 129, 148, 150, 180, 181). 
-Put the print sentence in parantheses ()
+To use it in python3, change the all print commands.
 
 3. Edit the vic_auto.py script from line 27 to 38 (Give the paths of requiered files):
 
