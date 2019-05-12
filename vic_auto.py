@@ -23,12 +23,14 @@ import numpy as np
 ### Edit the path of following files:
 ### Note: Coordinate system for all input files should be : GCS WGS 1984 
 ###Use \\ or / for file path, dont use \
+### Make sure, there is not any space in the file or folder name (use _ insted)
 
-workspace="G:\\Rathore\\vic_auto6"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
-shape_file="G:\\Rathore\\vic_auto6\\shape_proj.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
-dem="G:\\Rathore\\vic_auto5\\dem_extfill"                  #DEM "  "  "  "  "  "        "    "        "        "      "
-lulc="G:\\Rathore\\swat_inp\\soil_lulc\\lulc.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
-soil="G:\\Rathore\\swat_inp\\soil_lulc\\soil_new_fao1"   #SOIL Image  (To make soil parameter file)
+
+workspace="G:\\Rathore\Hosein_input\\inputs\\out1"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
+shape_file="G:\\Rathore\\Hosein_input\\inputs\\shapfile\\2050724400.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
+dem="G:\\Rathore\\Hosein_input\\inputs\\Dem\\Dem_Mashhad.tif"                  #DEM "  "  "  "  "  "        "    "        "        "      "
+lulc="G:\\Rathore\\Hosein_input\\inputs\\LuLc\\mashhad_lulc_newpro.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
+soil="G:\\Rathore\\Hosein_input\\inputs\\soil\\mashhad-basin.HWSD.tif"   #SOIL Image  (To make soil parameter file)
 rooting_depth_csv="C:\\Python27\\ArcGIS10.5\\vic_auto\\RootingDepths.csv"  ##Root depth csv file, provided with the docs
 soil_appendix="C:\\Python27\\ArcGIS10.5\\vic_auto\\soil_appendix_3layer.xlsx"  ##Soil appendix, provied with docs
 
@@ -66,13 +68,14 @@ arcpy.AddField_management("fishnet_f.shp", "run_grid", "SHORT", 0, "", "", "refc
 print "Calculating area of each grid cell after union... \n"
 arcpy.CalculateField_management("union.shp","area1",'!shape.area!',"PYTHON")
 temp_layer=arcpy.MakeFeatureLayer_management("union.shp","temp_lyr")
-arcpy.SelectLayerByAttribute_management(temp_layer,"NEW_SELECTION","basin_pt=1 AND area1>=25000000*0.1")
+arcpy.SelectLayerByAttribute_management(temp_layer,"NEW_SELECTION","basin_pt=1")
 print "Making run grid... \n"
 arcpy.CopyFeatures_management(temp_layer,"new_run_grid")
 arcpy.AddField_management("new_run_grid.shp", "run_grid1", "SHORT", 0, "", "", "refcode", "NULLABLE", "REQUIRED")
 arcpy.CalculateField_management("new_run_grid.shp","run_grid1",'1')
 
 arcpy.DeleteField_management(shape_file,"basin_pt")
+#arcpy.DeleteField_management("new_run_grid.shp","basin_pt")
 d= {k:v for k,v in arcpy.da.SearchCursor("new_run_grid.shp",["FID_Fishne","run_grid1"])}
 
 with arcpy.da.UpdateCursor("fishnet_f.shp",["FID","run_grid"]) as cursor:
@@ -89,22 +92,26 @@ arcpy.gp.ZonalStatisticsAsTable_sa("fish_lyr","FID",dem,"ele_tab",'DATA','MEAN')
 
 #print "list of column names in fishnet layer", [aa.name for aa in arcpy.ListFields("fish_lyr")], "\n\n\n"
 #print "list of col names for elevation zonal table", [aa.name for aa in arcpy.ListFields("ele_tab")], "\n"
+ddd={k:v for k,v in arcpy.da.SearchCursor("ele_tab",["FID","MEAN"])}
+with arcpy.da.UpdateCursor("fish_lyr",["FID","ELEVATION"]) as cursor:
+    for row in cursor:
+        if row[0] in ddd:
+            row[1]=ddd[row[0]]
+            cursor.updateRow(row)
 
-arcpy.AddJoin_management("fish_lyr","FID","ele_tab","FID")
-arcpy.CalculateField_management("fish_lyr","fishnet_f.ELEVATION","!ele_tab:MEAN!","PYTHON")
-arcpy.RemoveJoin_management("fish_lyr","ele_tab")
+arcpy.SelectLayerByAttribute_management("fish_lyr","NEW_SELECTION",'"run_grid"=1')
+
 arcpy.AddField_management("fish_lyr","SOIL","SHORT")
 print "Indetifying soil texture... \n"
-arcpy.gp.ZonalStatisticsAsTable_sa("fish_lyr","FID",soil,"soil_tab",'DATA','MAJORITY')
+arcpy.gp.ZonalStatisticsAsTable_sa("new_run_grid.shp","FID_fishne",soil,"soil_tab",'DATA','MAJORITY')
 
-dd={k:v for k,v in arcpy.da.SearchCursor("soil_tab",["FID","MAJORITY"])}
+dd={k:v for k,v in arcpy.da.SearchCursor("soil_tab",["FID_fishne","MAJORITY"])}
 with arcpy.da.UpdateCursor("fish_lyr",["FID","SOIL"]) as cursor:
     for row in cursor:
         if row[0] in dd:
             row[1]=dd[row[0]]
             cursor.updateRow(row)
-            
-#arcpy.RemoveJoin_management("fish_lyr","soil_tab")
+
 arcpy.AddField_management("fish_lyr","lat","FLOAT")
 arcpy.AddField_management("fish_lyr","lon","FLOAT")
 print "Identifying centroid locations of each grid cells ... \n"
@@ -112,7 +119,8 @@ arcpy.CalculateField_management("fish_lyr","lat","!SHAPE.CENTROID.Y!","PYTHON_9.
 arcpy.CalculateField_management("fish_lyr","lon","!SHAPE.CENTROID.X!","PYTHON_9.3")
 
 arcpy.AddField_management("fish_lyr","slope","FLOAT")
-arcpy.gp.Slope_sa(dem, 'slope_temp', 'PERCENT_RISE',"1")
+print "The x,y are in degeree and z (elevation) is in meter, so the z=0.000009 was used bcoz 1 meter ~ 0.000009 (CAN BE CHANGED ACCORDINGLY)... \n"
+arcpy.gp.Slope_sa(dem, 'slope_temp', 'PERCENT_RISE',"0.000009")   # The x,y are in degeree and z in meter, so 1 meter ~ 0.000009 (CAN BE CHANGED ACCORDINGLY)
 (arcpy.Raster('slope_temp')/100).save("slope_per")
 
 print("Calculating slope... \n")
@@ -142,10 +150,26 @@ c1=temp.columns.tolist()
 colord=[c1[0]]+[c1[-1]]+c1[2:6]+[c1[-2]]+c1[6:20]+[c1[1]]+c1[20:-2]
 new_temp=temp[colord]
 os.chdir(workspace)
-#os.mkdir("parameter_file")
-new_temp.to_csv("soil_parameter_new",index=None,sep="\t")
+
+arcpy.AddJoin_management("fish_lyr","SOIL","soil_app1","SOIL_CLASS")
+cols=[a.name for a in arcpy.ListFields("fish_lyr")]
+cols_to_take=[cols[0]]+cols[3:5]+cols[6:9]+cols[12:]
+arcpy.ExportXYv_stats("fish_lyr",cols_to_take,"COMMA","temp_soil.csv","ADD_FIELD_NAMES")
+temp=pd.read_csv(workspace+"\\"+"temp_soil.csv")
+temp=temp.iloc[:,2:]
+
+temp["dsmax"]=temp["FISHNET_F.SLOPE"]*temp["SOIL_APP1:KSAT_Z1"]
+temp["grid_no"]=temp['FISHNET_F.FID']
+temp=temp.drop(['FISHNET_F.FID','FISHNET_F.SLOPE'],axis=1)
+c1=temp.columns.tolist()
+colord=[c1[0]]+[c1[-1]]+c1[2:6]+[c1[-2]]+c1[6:20]+[c1[1]]+c1[20:-2]
+new_temp=temp[colord]
+new_temp=new_temp.dropna(axis=0)
+os.chdir(workspace)
+new_temp.to_csv("soil_parameter_new.txt",index=None,sep="\t")
 arcpy.RemoveJoin_management("fish_lyr","soil_app1")
 print "soil parameter with name soil_parameter_new has been generated, it is located in worskpace \n"
+
 
 print "Generating vegetation par file... \n"
 arcpy.gp.TabulateArea_sa("fish_lyr","FID",lulc,"Value","lulc_tab")
@@ -177,6 +201,8 @@ for i in range(grid_data.shape[0]):
 
 df.replace(-9999," ").to_excel("vegparam_python_test.xlsx",header=None,index=None)
 
-print "Completed making vegetation par file (vegparam_python_test.xlsx), located in workspace\n\n"
+print "Completed making vegetation par file (vegparam_python_test.xlsx), located in workspace\n"
 print "Convert the excel file to tab delimited text file for VIC"
+print "Vegetation parameter file and soil parameter file are generated successfully. Remove the header line from soil par file"
+print "****************************************************************"
 ############################################################################################################################
