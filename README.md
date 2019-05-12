@@ -40,4 +40,4 @@ To use it in python3, change the all print commands.
 
 5. Prepare the soil raster according to soil_class and type in soil_appendix_3layer.xlsx file.
 
-6. Prepare the land use land cover raster according to LULC_CLASS.xlsx file
+6. Prepare the land use land cover raster according to veg library file.
