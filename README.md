@@ -20,12 +20,12 @@ This python script generates soil parameter and vegetation parameter files for V
 
 # How to Use
 
-Put all input files' location in *vic_auto.py* as mentioned there. Make sure that all the input files have the same co-ordinate system as stated in the file.
+* Put all input files' location in *vic_auto.py* as mentioned there. Make sure that all the input files have the same co-ordinate system as stated in the file.
 
-Other required files are provided with this repo, provide thier locations also.
+* Other required files are provided with this repo, provide thier locations also.
 
 ## Note
 
-While preparing the soil map, define the soil class types according to the provided soil appendix file.
+* While preparing the soil map, define the soil class types according to the provided soil appendix file.
 
-Use *vic_auto.py* for soil and vegetation file generation. An addition file *force_auto.py* is provided to generate meteorological forcing files for the basin area.
+* Use *vic_auto.py* for soil and vegetation file generation. An addition file *force_auto.py* is provided to generate meteorological forcing files for the basin area.
