@@ -1,4 +1,3 @@
-
 """
 Created on Sat Apr 13 2019
 @author: Lokendra Singh Rathore
@@ -10,7 +9,6 @@ It does not generate Forcing files
 The script is written in Python 2.7 and has been tested on ArcGIS version 10.5
 If you have Python 3, then change put the parantheses after print command allover otherwise it will not run
 """
-
 
 #############################################################################################################################
 #Following python libraries should be installed
@@ -134,83 +132,88 @@ arcpy.CopyFeatures_management("fish_lyr","fishnet_final.shp")
 arcpy.AddField_management("fishnet_final.shp","area","FLOAT")
 arcpy.CalculateField_management("fishnet_final.shp","area","!shape.area!","PYTHON")
 
+user_soil=input("Do you want to generate Soil Parameter File?\n (Type 1 for YES and 0 for NO:)")
 
-print "Preparing soil parameter file, dont open any files until it completes \n"
-arcpy.ExcelToTable_conversion(soil_appendix,"soil_app1")
-arcpy.AddJoin_management("fish_lyr","SOIL","soil_app1","SOIL_CLASS")
-cols=[a.name for a in arcpy.ListFields("fish_lyr")]
-cols_to_take=[cols[0]]+cols[3:5]+cols[6:9]+cols[12:]
-arcpy.ExportXYv_stats("fish_lyr",cols_to_take,"COMMA","temp_soil.csv","ADD_FIELD_NAMES")
-temp=pd.read_csv(workspace+"\\"+"temp_soil.csv")
-temp=temp.iloc[:,2:]
+if user_soil==1:
+    print "Preparing soil parameter file, dont open any files until it completes \n"
+    arcpy.ExcelToTable_conversion(soil_appendix,"soil_app1")
+    arcpy.AddJoin_management("fish_lyr","SOIL","soil_app1","SOIL_CLASS")
+    cols=[a.name for a in arcpy.ListFields("fish_lyr")]
+    cols_to_take=[cols[0]]+cols[3:5]+cols[6:9]+cols[12:]
+    arcpy.ExportXYv_stats("fish_lyr",cols_to_take,"COMMA","temp_soil.csv","ADD_FIELD_NAMES")
+    temp=pd.read_csv(workspace+"\\"+"temp_soil.csv")
+    temp=temp.iloc[:,2:]
 
-temp["dsmax"]=temp["FISHNET_F.SLOPE"]*temp["SOIL_APP1:KSAT_Z1"]
-temp["grid_no"]=temp['FISHNET_F.FID']
-temp=temp.drop(['FISHNET_F.FID','FISHNET_F.SLOPE'],axis=1)
-c1=temp.columns.tolist()
-colord=[c1[0]]+[c1[-1]]+c1[2:6]+[c1[-2]]+c1[6:20]+[c1[1]]+c1[20:-2]
-new_temp=temp[colord]
-os.chdir(workspace)
+    temp["dsmax"]=temp["FISHNET_F.SLOPE"]*temp["SOIL_APP1:KSAT_Z1"]
+    temp["grid_no"]=temp['FISHNET_F.FID']
+    temp=temp.drop(['FISHNET_F.FID','FISHNET_F.SLOPE'],axis=1)
+    c1=temp.columns.tolist()
+    colord=[c1[0]]+[c1[-1]]+c1[2:6]+[c1[-2]]+c1[6:20]+[c1[1]]+c1[20:-2]
+    new_temp=temp[colord]
+    os.chdir(workspace)
 
-arcpy.AddJoin_management("fish_lyr","SOIL","soil_app1","SOIL_CLASS")
-cols=[a.name for a in arcpy.ListFields("fish_lyr")]
-cols_to_take=[cols[0]]+cols[3:5]+cols[6:9]+cols[12:]
-arcpy.ExportXYv_stats("fish_lyr",cols_to_take,"COMMA","temp_soil.csv","ADD_FIELD_NAMES")
-temp=pd.read_csv(workspace+"\\"+"temp_soil.csv")
-temp=temp.iloc[:,2:]
+    arcpy.AddJoin_management("fish_lyr","SOIL","soil_app1","SOIL_CLASS")
+    cols=[a.name for a in arcpy.ListFields("fish_lyr")]
+    cols_to_take=[cols[0]]+cols[3:5]+cols[6:9]+cols[12:]
+    arcpy.ExportXYv_stats("fish_lyr",cols_to_take,"COMMA","temp_soil.csv","ADD_FIELD_NAMES")
+    temp=pd.read_csv(workspace+"\\"+"temp_soil.csv")
+    temp=temp.iloc[:,2:]
 
-temp["dsmax"]=temp["FISHNET_F.SLOPE"]*temp["SOIL_APP1:KSAT_Z1"]
-temp["grid_no"]=temp['FISHNET_F.FID']
-temp=temp.drop(['FISHNET_F.FID','FISHNET_F.SLOPE'],axis=1)
-c1=temp.columns.tolist()
-colord=[c1[0]]+[c1[-1]]+c1[2:6]+[c1[-2]]+c1[6:20]+[c1[1]]+c1[20:-2]
-new_temp=temp[colord]
-new_temp=new_temp.dropna(axis=0)
-os.chdir(workspace)
-new_temp.to_csv("soil_parameter_new.txt",index=None,sep="\t")
-arcpy.RemoveJoin_management("fish_lyr","soil_app1")
-print "soil parameter with name soil_parameter_new has been generated, it is located in worskpace \n"
+    temp["dsmax"]=temp["FISHNET_F.SLOPE"]*temp["SOIL_APP1:KSAT_Z1"]
+    temp["grid_no"]=temp['FISHNET_F.FID']
+    temp=temp.drop(['FISHNET_F.FID','FISHNET_F.SLOPE'],axis=1)
+    c1=temp.columns.tolist()
+    colord=[c1[0]]+[c1[-1]]+c1[2:6]+[c1[-2]]+c1[6:20]+[c1[1]]+c1[20:-2]
+    new_temp=temp[colord]
+    new_temp=new_temp.dropna(axis=0)
+    os.chdir(workspace)
+    new_temp.to_csv("soil_parameter_new.txt",index=None,sep="\t")
+    arcpy.RemoveJoin_management("fish_lyr","soil_app1")
+    print "soil parameter with name soil_parameter_new has been generated, it is located in worskpace \n"
+    print "Remove the header line from soil par file or put a # to make it comment for VIC  \n"
 
+#### VEG PARAM SCRIPT##########
+user_veg=input("Do you want to generate Vegetation Parameter File? \n (Type 1 for YES an 0 for NO:)")
+if user_veg==1:
+    print "\nGenerating vegetation par file... \n"
+    arcpy.gp.TabulateArea_sa("fish_lyr","FID",lulc,"Value","lulc_tab")
+    arcpy.TableToTable_conversion("lulc_tab",arcpy.env.workspace,"temp_lulc.csv")
+    temp_l=pd.read_csv(workspace+"\\"+"temp_lulc.csv")
+    temp_l=temp_l.drop(["OID"],axis=1)
+    temp_l["Run_grid"]=1
+    tc=temp_l.columns.tolist()
+    tc_new=[tc[0]]+[tc[-1]]+tc[1:-1]
+    temp_l=temp_l[tc_new]
+    grid_data=temp_l
 
-print "Generating vegetation par file... \n"
-arcpy.gp.TabulateArea_sa("fish_lyr","FID",lulc,"Value","lulc_tab")
-arcpy.TableToTable_conversion("lulc_tab",arcpy.env.workspace,"temp_lulc.csv")
-temp_l=pd.read_csv(workspace+"\\"+"temp_lulc.csv")
-temp_l=temp_l.drop(["OID"],axis=1)
-temp_l["Run_grid"]=1
-tc=temp_l.columns.tolist()
-tc_new=[tc[0]]+[tc[-1]]+tc[1:-1]
-temp_l=temp_l[tc_new]
-grid_data=temp_l
+    df=pd.DataFrame()
+    for i in range(grid_data.shape[0]):
+        if grid_data["Run_grid"][i]!= 0:
+            NZ=np.count_nonzero(grid_data.iloc[i,2:])                 #no. of non zero lulc areas
+            s=pd.DataFrame([grid_data["FID"][i],NZ,-9999,-9999,-9999,-9999,-9999,-9999,-9999]).T
+            for j in range(2,grid_data.shape[1]):
+                if grid_data.iloc[i,j]!=0:
+                    lulc_class=int(list(grid_data)[j].split("_")[1])
+                    fract=grid_data.iloc[i,j]/sum(grid_data.iloc[i,2:])
+                    for k in range(root.shape[0]):
+                        if root.iloc[k,0]==lulc_class:
+                            rvalues=root.iloc[k,1:]
+                            s1=pd.DataFrame(pd.concat([pd.Series([-9999,lulc_class,fract]),rvalues])).T
+                            s1.columns=range(9)
+                            s=s.append(s1)
+            df=df.append(s)
 
-df=pd.DataFrame()
-for i in range(grid_data.shape[0]):
-    if grid_data["Run_grid"][i]!= 0:
-        NZ=np.count_nonzero(grid_data.iloc[i,2:])                 #no. of non zero lulc areas
-        s=pd.DataFrame([grid_data["FID"][i],NZ,-9999,-9999,-9999,-9999,-9999,-9999,-9999]).T
-        for j in range(2,grid_data.shape[1]):
-            if grid_data.iloc[i,j]!=0:
-                lulc_class=int(list(grid_data)[j].split("_")[1])
-                fract=grid_data.iloc[i,j]/sum(grid_data.iloc[i,2:])
-                for k in range(root.shape[0]):
-                    if root.iloc[k,0]==lulc_class:
-                        rvalues=root.iloc[k,1:]
-                        s1=pd.DataFrame(pd.concat([pd.Series([-9999,lulc_class,fract]),rvalues])).T
-                        s1.columns=range(9)
-                        s=s.append(s1)
-        df=df.append(s)
+    df.replace(-9999," ").to_excel("vegparam_python_test.xlsx",header=None,index=None)
 
-df.replace(-9999," ").to_excel("vegparam_python_test.xlsx",header=None,index=None)
-
-print "Completed making vegetation par file (vegparam_python_test.xlsx), located in workspace\n"
-print "Convert the excel file to tab delimited text file for VIC\n"
-print "Vegetation parameter file and soil parameter file have been generated successfully. Remove the header line from soil par file\n"
-print "****************************************************************************************\n"
+    print "Completed making vegetation par file (vegparam_python_test.xlsx), located in workspace\n"
+    print "Convert the excel file to tab delimited text file for VIC\n"
+#print "Vegetation parameter file and soil parameter file have been generated successfully. Remove the header line from soil par file\n"
+#print "**************************************************    ॐ   ******************************************************"
 
 ############## SCRIPT FOR SONW/ELEVATION BAND FILE GENERATION ###################
-user=input("\nDo you want to make snow/elevation band file? (type 0 for no, 1 for yes): \n")
+user=input("Do you want to make snow/elevation band file?\n (type 0 for no, 1 for yes):\n ")
 if user==1:
-    user_i=input("Type the number of elevation bands required: \n")
+    user_i=input("Type the number of elevation bands required: ")
     dem_ext=arcpy.sa.ExtractByMask(dem,"fishnet_f.shp")
     dem_ext.save("dem_extfish.tif")
     dem_desc=arcpy.sa.Raster("dem_extfish.tif")
@@ -219,7 +222,7 @@ if user==1:
     band_dif=math.ceil((d2-d1)/user_i)
     remap=[]
     r1=d1
-    print "The elevation band file will have the following range of bands: \n"
+    print "\nThe elevation band file will have the following range of bands: \n"
     for i in range(user_i):
         r= [r1+(i*band_dif), r1+band_dif*(i+1),i+1]
         print r
@@ -229,7 +232,7 @@ if user==1:
     dem_re=arcpy.sa.Reclassify("dem_extfish.tif","VALUE",arcpy.sa.RemapRange(remap))
     dem_re.save("reclass_dem_eleband.tif")
     
-    print "Elevation band file is being processed... \n"
+    print "\nElevation band file is being processed... \n"
     arcpy.RasterToPolygon_conversion(in_raster=dem_re,raster_field='VALUE',out_polygon_features="ras2poly_redem",simplify="NO_SIMPLIFY")
     arcpy.sa.TabulateArea("fishnet_f.shp","FID", "reclass_dem_eleband.tif", "VALUE","tab_area_eleband")
     arcpy.Union_analysis(["ras2poly_redem.shp","fishnet_f.shp"],"union_elebnd")
@@ -259,4 +262,6 @@ if user==1:
     dfm2=dfm2.drop(["gridcode","run_grid"],axis=1)
     dfm2.to_csv("elebandfile_"+str(user_i),header=None,sep="\t")
     print "Elevation/snow band file with mentioned band numbers, has been prepared with the name of \n"
-    print "elebandfile_"+str(user_i)+ "in the workspace."
+    print "elebandfile_"+str(user_i)+ " in the workspace."
+
+print "VIC input files have been generated in the defined worskpace"
