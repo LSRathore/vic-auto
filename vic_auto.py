@@ -25,17 +25,18 @@ import numpy as np
 ### Make sure, there is not any space in the file or folder name (use _ insted)
 
 
-workspace="M:\\rathore\\vic20km\\gis"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
-shape_file="G:\\Rathore\\vic_auto5\\shape_proj.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
-dem="G:\\Rathore\\vic_auto5\\dem_extfill"                  #DEM "  "  "  "  "  "        "    "        "        "      "
-lulc="G:\\Rathore\\swat_inp\\soil_lulc\\lulc.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
-soil="M:\\rathore\\vic20km\gis\\soil_fao_sb.tif"   #SOIL Image  (To make soil parameter file)
+workspace="G:\\Rathore\\hosein_rout\\new"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
+shape_file="G:\\Rathore\\hosein_rout\\shapfile\\shapfile\\2050724400.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
+dem="G:\\Rathore\\hosein_rout\\Dem\Dem\\dem_full.tif"                  #DEM "  "  "  "  "  "        "    "        "        "      "
+lulc="G:\\Rathore\\hosein_rout\\soil_lulc\\LuLc\\mashhad_lulc_newpro.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
+soil="G:\\Rathore\\hosein_rout\\soil_lulc\\soil\\mashhad-basin.HWSD.tif"   #SOIL Image  (To make soil parameter file)
 rooting_depth_csv="C:\\Python27\\ArcGIS10.5\\vic_auto\\RootingDepths.csv"  ##Root depth csv file, provided with the docs
 soil_appendix="C:\\Python27\\ArcGIS10.5\\vic_auto\\soil_appendix_3layer.xlsx"  ##Soil appendix, provied with docs
 
 ###Cell height and width in degree, Edit acc
-cell_h=0.25
-cell_w=0.25
+cell_h=0.1
+cell_w=0.1
+
 
 ##########################################################################################################################
 ## DO NOT EDIT ANYTHING##
@@ -135,7 +136,7 @@ arcpy.CalculateField_management("fishnet_final.shp","area","!shape.area!","PYTHO
 user_soil=input("Do you want to generate Soil Parameter File?\n (Type 1 for YES and 0 for NO:)")
 
 if user_soil==1:
-    print "Preparing soil parameter file, dont open any files until it completes \n"
+    print "Preparing soil parameter file, dont open any files until it completes... \n"
     arcpy.ExcelToTable_conversion(soil_appendix,"soil_app1")
     arcpy.AddJoin_management("fish_lyr","SOIL","soil_app1","SOIL_CLASS")
     cols=[a.name for a in arcpy.ListFields("fish_lyr")]
@@ -211,40 +212,45 @@ if user_veg==1:
 #print "**************************************************    ॐ   ******************************************************"
 
 ############## SCRIPT FOR SONW/ELEVATION BAND FILE GENERATION ###################
+os.chdir(workspace)
 user=input("Do you want to make snow/elevation band file?\n (type 0 for no, 1 for yes):\n ")
 if user==1:
     user_i=input("Type the number of elevation bands required: ")
-    dem_ext=arcpy.sa.ExtractByMask(dem,"fishnet_f.shp")
-    dem_ext.save("dem_extfish.tif")
-    dem_desc=arcpy.sa.Raster("dem_extfish.tif")
+    dem_ext=arcpy.sa.ExtractByMask(dem,shape_file)
+
+    dem_desc=arcpy.sa.Raster(str(dem_ext))
     d1=dem_desc.minimum
     d2=dem_desc.maximum
     band_dif=math.ceil((d2-d1)/user_i)
     remap=[]
-    r1=d1
-    print "\nThe elevation band file will have the following range of bands: \n"
+    print "The elevation band file will have the following range of bands: \n"
     for i in range(user_i):
         r= [r1+(i*band_dif), r1+band_dif*(i+1),i+1]
         print r
         remap.append(r)
     
+    remap[-1][1]=d2
 
-    dem_re=arcpy.sa.Reclassify("dem_extfish.tif","VALUE",arcpy.sa.RemapRange(remap))
+    dem_re=arcpy.sa.Reclassify(str(dem_ext),"VALUE",arcpy.sa.RemapRange(remap))
     dem_re.save("reclass_dem_eleband.tif")
     
-    print "\nElevation band file is being processed... \n"
+    print "Elevation band file is being processed... \n"
     arcpy.RasterToPolygon_conversion(in_raster=dem_re,raster_field='VALUE',out_polygon_features="ras2poly_redem",simplify="NO_SIMPLIFY")
     arcpy.sa.TabulateArea("fishnet_f.shp","FID", "reclass_dem_eleband.tif", "VALUE","tab_area_eleband")
     arcpy.Union_analysis(["ras2poly_redem.shp","fishnet_f.shp"],"union_elebnd")
     arcpy.gp.ZonalStatisticsAsTable_sa('union_elebnd.shp', 'FID_ras2po', 'dem_extfish.tif', "ele_eachzonetab1", 'DATA', 'MEAN')
-    arcpy.JoinField_management("union_elebnd.shp","FID_ras2po","ele_eachzonetab1","FID_ras2po")
-    arcpy.TableToExcel_conversion("union_elebnd.shp","temp_eb.xls")
-    
+    arcpy.AddField_management("union_elebnd.shp","MEAN_ELE","DOUBLE")
+    arcpy.MakeFeatureLayer_management("union_elebnd.shp","union_elebndlyr")
+    arcpy.AddJoin_management("union_elebndlyr","FID_ras2po","ele_eachzonetab1","FID_ras2po",join_type="KEEP_COMMON")
+    arcpy.CalculateField_management("union_elebndlyr",'union_elebnd.MEAN_ELE',"!ele_eachzonetab1:MEAN!","PYTHON")
+    arcpy.RemoveJoin_management("union_elebndlyr")
+    arcpy.TableToExcel_conversion("union_elebndlyr","temp_eb.xls")
+
     temp_eb=pd.read_excel("temp_eb.xls")
-    temp1=temp_eb[(temp_eb["run_grid"]>=0) & (temp_eb["FID_ras2po"]>=0)]
-    temp2=temp1[["FID","FID_ras2po","FID_fishne","run_grid","MEAN",'gridcode']]
-    pivot=pd.pivot_table(temp2,index=["FID_fishne","run_grid"],columns="gridcode",values="MEAN",aggfunc=np.mean,fill_value=0)
-    
+    temp1=temp_eb[temp_eb["FID_ras2po"]>=0]
+    temp2=temp1[["FID","FID_ras2po","FID_fishne","run_grid","MEAN_ELE",'gridcode']]
+    pivot=pd.pivot_table(temp2,index=["FID_fishne"],columns="gridcode",values="MEAN_ELE",aggfunc=np.mean,fill_value=0)
+
     arcpy.TableToExcel_conversion("tab_area_eleband","tabulate_area_temp.xls")
     tab_area=pd.read_excel("tabulate_area_temp.xls")
     tab_area["sum"]=tab_area.iloc[:,2:].sum(axis=1)
@@ -252,16 +258,15 @@ if user==1:
     for i in range(user_i):
         df_rand[str(i)]=tab_area.iloc[:,i+2]/tab_area["sum"]
 
-    pivot=pivot.reset_index()
-    pivot=pivot.drop("FID_fishne",axis=1)
-    df_rand["gridcode"]=pivot.index
-    pivot["gridcode"]=df_rand["gridcode"]
-    dfm1=df_rand.merge(pivot,on="gridcode")
-    dfm2=dfm1.merge(df_rand,on="gridcode")
-    dfm2=dfm2[dfm2["run_grid"]==1]
-    dfm2=dfm2.drop(["gridcode","run_grid"],axis=1)
-    dfm2.to_csv("elebandfile_"+str(user_i),header=None,sep="\t")
-    print "Elevation/snow band file with mentioned band numbers, has been prepared with the name of \n"
-    print "elebandfile_"+str(user_i)+ " in the workspace."
+    df_rand["new"]=list(pivot.index)
+    pivot["new"]=list(pivot.index)
+    dfm1=df_rand.merge(pivot)
+    dfm2=pd.concat([dfm1,df_rand],axis=1)
+    dfm2=dfm2.iloc[:,:-1]
+    dfm2.index=dfm2.new
+    dfm2=dfm2.drop("new",axis=1)
+    dfm2.to_csv("elebandfile_"+str(user_i),sep="\t",header=None)
 
+    print "Elevation/snow band file with mentioned band numbers, has been prepared with the name of \n"
+    print "elebandfile_"+str(user_i)+ " in the workspace.\n"
 print "VIC input files have been generated in the defined worskpace"
