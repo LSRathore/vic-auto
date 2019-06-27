@@ -101,7 +101,7 @@ with arcpy.da.UpdateCursor("fish_lyr",["FID","ELEVATION"]) as cursor:
 arcpy.SelectLayerByAttribute_management("fish_lyr","NEW_SELECTION",'"run_grid"=1')
 
 arcpy.AddField_management("fish_lyr","SOIL","SHORT")
-print "Indetifying soil texture... \n"
+print "Identifying soil texture... \n"
 arcpy.gp.ZonalStatisticsAsTable_sa("new_run_grid.shp","FID_fishne",soil,"soil_tab",'DATA','MAJORITY')
 
 dd={k:v for k,v in arcpy.da.SearchCursor("soil_tab",["FID_fishne","MAJORITY"])}
