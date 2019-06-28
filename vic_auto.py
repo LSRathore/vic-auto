@@ -27,7 +27,7 @@ import numpy as np
 
 workspace="G:\\Rathore\\hosein_rout\\new"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
 shape_file="G:\\Rathore\\hosein_rout\\shapfile\\shapfile\\2050724400.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
-dem="G:\\Rathore\\hosein_rout\\Dem\Dem\\dem_full.tif"                  #DEM "  "  "  "  "  "        "    "        "        "      "
+dem="G:\\Rathore\\hosein_rout\\dem_new\\dem_full1.tif"                  #DEM "  "  "  "  "  "        "    "        "        "      "
 lulc="G:\\Rathore\\hosein_rout\\soil_lulc\\LuLc\\mashhad_lulc_newpro.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
 soil="G:\\Rathore\\hosein_rout\\soil_lulc\\soil\\mashhad-basin.HWSD.tif"   #SOIL Image  (To make soil parameter file)
 rooting_depth_csv="C:\\Python27\\ArcGIS10.5\\vic_auto\\RootingDepths.csv"  ##Root depth csv file, provided with the docs
@@ -101,7 +101,7 @@ with arcpy.da.UpdateCursor("fish_lyr",["FID","ELEVATION"]) as cursor:
 arcpy.SelectLayerByAttribute_management("fish_lyr","NEW_SELECTION",'"run_grid"=1')
 
 arcpy.AddField_management("fish_lyr","SOIL","SHORT")
-print "Identifying soil texture... \n"
+print "Indetifying soil texture... \n"
 arcpy.gp.ZonalStatisticsAsTable_sa("new_run_grid.shp","FID_fishne",soil,"soil_tab",'DATA','MAJORITY')
 
 dd={k:v for k,v in arcpy.da.SearchCursor("soil_tab",["FID_fishne","MAJORITY"])}
@@ -222,6 +222,7 @@ if user==1:
     d1=dem_desc.minimum
     d2=dem_desc.maximum
     band_dif=math.ceil((d2-d1)/user_i)
+    r1=d1
     remap=[]
     print "The elevation band file will have the following range of bands: \n"
     for i in range(user_i):
@@ -232,13 +233,13 @@ if user==1:
     remap[-1][1]=d2
 
     dem_re=arcpy.sa.Reclassify(str(dem_ext),"VALUE",arcpy.sa.RemapRange(remap))
-    dem_re.save("reclass_dem_eleband.tif")
+    #dem_re.save("reclass_dem_eleband.tif")
     
     print "Elevation band file is being processed... \n"
     arcpy.RasterToPolygon_conversion(in_raster=dem_re,raster_field='VALUE',out_polygon_features="ras2poly_redem",simplify="NO_SIMPLIFY")
-    arcpy.sa.TabulateArea("fishnet_f.shp","FID", "reclass_dem_eleband.tif", "VALUE","tab_area_eleband")
+    arcpy.sa.TabulateArea("fishnet_final.shp","FID", dem_re, "VALUE","tab_area_eleband")
     arcpy.Union_analysis(["ras2poly_redem.shp","fishnet_f.shp"],"union_elebnd")
-    arcpy.gp.ZonalStatisticsAsTable_sa('union_elebnd.shp', 'FID_ras2po', 'dem_extfish.tif', "ele_eachzonetab1", 'DATA', 'MEAN')
+    arcpy.gp.ZonalStatisticsAsTable_sa('union_elebnd.shp', 'FID_ras2po', dem_ext, "ele_eachzonetab1", 'DATA', 'MEAN')
     arcpy.AddField_management("union_elebnd.shp","MEAN_ELE","DOUBLE")
     arcpy.MakeFeatureLayer_management("union_elebnd.shp","union_elebndlyr")
     arcpy.AddJoin_management("union_elebndlyr","FID_ras2po","ele_eachzonetab1","FID_ras2po",join_type="KEEP_COMMON")
@@ -247,7 +248,7 @@ if user==1:
     arcpy.TableToExcel_conversion("union_elebndlyr","temp_eb.xls")
 
     temp_eb=pd.read_excel("temp_eb.xls")
-    temp1=temp_eb[temp_eb["FID_ras2po"]>=0]
+    temp1=temp_eb[(temp_eb["run_grid"]==1) & (temp_eb["FID_ras2po"]>=0)]
     temp2=temp1[["FID","FID_ras2po","FID_fishne","run_grid","MEAN_ELE",'gridcode']]
     pivot=pd.pivot_table(temp2,index=["FID_fishne"],columns="gridcode",values="MEAN_ELE",aggfunc=np.mean,fill_value=0)
 
@@ -269,4 +270,5 @@ if user==1:
 
     print "Elevation/snow band file with mentioned band numbers, has been prepared with the name of \n"
     print "elebandfile_"+str(user_i)+ " in the workspace.\n"
+    print "Make sure the elevation band file has same grid numbers as soil paramtere file"
 print "VIC input files have been generated in the defined worskpace"
