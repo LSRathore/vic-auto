@@ -18,7 +18,7 @@ Use *force_auto.py* to generate forcing files. Necessary files have been provide
 	
 	c) Soil map (If not available, use the [generate-soil-map](https://github.com/lokendrarathore/generate-soil-map) repo to generate a soil map for basin area)
 	
-	d) Shapefile of the basin
+	d) Shapefile of the catchment area
 
 # How to Use
 
