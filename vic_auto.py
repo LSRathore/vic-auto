@@ -68,7 +68,7 @@ arcpy.AddField_management("fishnet_f.shp", "run_grid", "SHORT", 0, "", "", "refc
 print "Calculating area of each grid cell after union... \n"
 arcpy.CalculateField_management("union.shp","area1",'!shape.area!',"PYTHON")
 temp_layer=arcpy.MakeFeatureLayer_management("union.shp","temp_lyr")
-arcpy.SelectLayerByAttribute_management(temp_layer,"NEW_SELECTION","basin_pt=1 AND area1>= 10000000")
+arcpy.SelectLayerByAttribute_management(temp_layer,"NEW_SELECTION","basin_pt=1 AND area1>= 1000000")
 print "Making run grid... \n"
 arcpy.CopyFeatures_management(temp_layer,"new_run_grid")
 arcpy.AddField_management("new_run_grid.shp", "run_grid1", "SHORT", 0, "", "", "refcode", "NULLABLE", "REQUIRED")
