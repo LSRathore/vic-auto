@@ -3,9 +3,9 @@ Created on Sat Apr 13 2019
 @author: Lokendra Singh Rathore
 @National Institute of Hydrology, Roorkee, India
 @email: lokendra.nalu@gmail.com
-This script is to generate vegetation parameter and soil parameter file 
+This script is to generate vegetation parameter, soil parameter file and elevation band file 
 for Variable Infiltration Capacity (VIC) hydrologic model
-It does not generate Forcing files
+It does not generate Forcing files (A seperate python script is there for forcing files in the repo.)
 The script is written in Python 2.7 and has been tested on ArcGIS version 10.5
 If you have Python 3, then change put the parantheses after print command allover otherwise it will not run
 """
