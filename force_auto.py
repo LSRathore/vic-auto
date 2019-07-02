@@ -27,16 +27,17 @@ from math import *
 import numpy as np
 from ecmwfapi import ECMWFDataServer
 #############################################################################################################################
-##        EDIT THIS SECTION  
+##        EDIT THIS SECTION ONLY
  
-workspace="G:\\Rathore\Hosein_input\\inputs\\force"                    # Make a new folder and give its path
-shape="G:\\Rathore\\Hosein_input\\inputs\\shapfile\\2050724400.shp"    #Shape file, coordinate- GCS WGS 1984
-start_time="2016-01-01"    # FORMAT "YYYY-MM-DD"  ( Date must be in quotation marks)
-end_time="2016-02-31"      #SAME FORMAT ^
+workspace="M:\\rathore\\vic20km\\force"                    # Make a new folder and give its path
+shape="G:\\Rathore\\vic_auto5\\shape_proj.shp"    #Shape file, coordinate- GCS WGS 1984
+start_time="1979-01-01"    # FORMAT "YYYY-MM-DD"  ( Date must be in quotation marks)
+end_time="2017-07-31"      #SAME FORMAT ^
 
+decimal_pts=2  #no of decimal points in forcing file name
 # grid size in degrees (on which the VIC will run)
-cell_h=0.1
-cell_w=0.1
+cell_h=0.25
+cell_w=0.25
 ###########################################################################################################################
 
 os.chdir(workspace)
@@ -59,26 +60,26 @@ server = ECMWFDataServer()
 print "Downloading weather data from ERA-Interim...\n"
 print "It may take several minutes if time perioed is long or basin area is large..\n"
 
-server = ECMWFDataServer()
-server.retrieve({
-    "class": "ei",
-    "dataset": "interim",
-    "date": date_era,
-    "expver": "1",
-    "grid": "0.5/0.5",                        
-    "levtype": "sfc",
-    "param": "165.128/166.128/201.128/202.128/228.128",
-    "step": "12",
-    "stream": "oper",
-    "time": "00:00:00",
-    "area": area,
-    "type": "fc",
-    "format": "netcdf",
-    "target": name_era_nc_file,
-})
+# server = ECMWFDataServer()
+# server.retrieve({
+#     "class": "ei",
+#     "dataset": "interim",
+#     "date": date_era,
+#     "expver": "1",
+#     "grid": "0.5/0.5",                        
+#     "levtype": "sfc",
+#     "param": "165.128/166.128/201.128/202.128/228.128",
+#     "step": "12",
+#     "stream": "oper",
+#     "time": "00:00:00",
+#     "area": area,
+#     "type": "fc",
+#     "format": "netcdf",
+#     "target": name_era_nc_file,
+# })
 
 print "Downloaded the weather data, a netcdf file has been generated in the worskpace specified...\n"
-nc=Dataset(name_era_nc_file)
+nc=Dataset('M:\\rathore\\vic20km\\force\\force_auto_era_1979_2017_5km.nc')
 lat=list(nc.variables['latitude'][:])
 lon=list(nc.variables['longitude'][:])
 
@@ -123,14 +124,16 @@ for i in range(len(ll)):
     u10=pd.DataFrame(nc.variables["u10"][:,near_lat_era_idx,near_lon_era_idx],columns=["win"])
     v10=pd.DataFrame(nc.variables["v10"][:,near_lat_era_idx,near_lon_era_idx],columns=["win"])
     tp[tp<0]=0
+    tp=tp*1000
     wind=np.sqrt(u10**2 + v10**2)
     tmax=tmax-273
     tmin=tmin-273
     final=pd.concat((tp,wind,tmax,tmin),axis=1)
-    final=final.round(3)
-    force_name="data_"+str(round(latt,2))+"_"+str(round(lonn,2))
+    final=final.round(decimal_pts)
+    temp_name="%."+str(decimal_pts)+"f"
+    force_name="data_"+temp_name % latt + "_" + temp_name % lonn
     final.to_csv(force_name,index=None, header=None, sep="\t")
-	
+
 
 print "**********Successfully generated forcing files**************"
 
