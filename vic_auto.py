@@ -57,6 +57,8 @@ opposite=str(right)+" "+ str(top)
 y_axis=str(left)+" "+str(bottom+0.010)
 #direc=arcpy.env.workspace+"\\"
 grid_name="fishnet_f.shp"
+threshold_area=cell_h*cell_h*10000*1000000*0.1
+sql_cmd="basin_pt=1 AND area1>= {0}".format(threshold_area)
 
 print "Making fishnet... \n"
 arcpy.CreateFishnet_management(grid_name,origin, y_axis, str(cell_h),str(cell_w), "0", "0", opposite, "LABELS",geometry_type="POLYGON")
@@ -68,7 +70,7 @@ arcpy.AddField_management("fishnet_f.shp", "run_grid", "SHORT", 0, "", "", "refc
 print "Calculating area of each grid cell after union... \n"
 arcpy.CalculateField_management("union.shp","area1",'!shape.area!',"PYTHON")
 temp_layer=arcpy.MakeFeatureLayer_management("union.shp","temp_lyr")
-arcpy.SelectLayerByAttribute_management(temp_layer,"NEW_SELECTION","basin_pt=1 AND area1>= 1000000")    ##area1 threshold can be changed accordingly
+arcpy.SelectLayerByAttribute_management(temp_layer,"NEW_SELECTION",sql_cmd)    ##area1 threshold can be changed accordingly
 print "Making run grid... \n"
 arcpy.CopyFeatures_management(temp_layer,"new_run_grid")
 arcpy.AddField_management("new_run_grid.shp", "run_grid1", "SHORT", 0, "", "", "refcode", "NULLABLE", "REQUIRED")
