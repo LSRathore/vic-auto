@@ -60,23 +60,23 @@ server = ECMWFDataServer()
 print "Downloading weather data from ERA-Interim...\n"
 print "It may take several minutes if time perioed is long or basin area is large..\n"
 
-# server = ECMWFDataServer()
-# server.retrieve({
-#     "class": "ei",
-#     "dataset": "interim",
-#     "date": date_era,
-#     "expver": "1",
-#     "grid": "0.5/0.5",                        
-#     "levtype": "sfc",
-#     "param": "165.128/166.128/201.128/202.128/228.128",
-#     "step": "12",
-#     "stream": "oper",
-#     "time": "00:00:00",
-#     "area": area,
-#     "type": "fc",
-#     "format": "netcdf",
-#     "target": name_era_nc_file,
-# })
+server = ECMWFDataServer()
+server.retrieve({
+    "class": "ei",
+    "dataset": "interim",
+    "date": date_era,
+    "expver": "1",
+    "grid": "0.5/0.5",                        
+    "levtype": "sfc",
+    "param": "165.128/166.128/201.128/202.128/228.128",
+    "step": "12",
+    "stream": "oper",
+    "time": "00:00:00",
+    "area": area,
+    "type": "fc",
+    "format": "netcdf",
+    "target": name_era_nc_file,
+})
 
 print "Downloaded the weather data, a netcdf file has been generated in the worskpace specified...\n"
 nc=Dataset('M:\\rathore\\vic20km\\force\\force_auto_era_1979_2017_5km.nc')
@@ -117,7 +117,7 @@ for i in range(len(ll)):
     latt=ll.iloc[i,1]
     lonn=ll.iloc[i,2]
     near_lat_era_idx=np.abs(np.asarray(lat)-latt).argmin()
-    near_lon_era_idx=np.abs(np.asarray(lat)-latt).argmin()
+    near_lon_era_idx=np.abs(np.asarray(lon)-lonn).argmin()
     tp=pd.DataFrame(nc.variables["tp"][:,near_lat_era_idx,near_lon_era_idx],columns=["tp"])
     tmax=pd.DataFrame(nc.variables["mx2t"][:,near_lat_era_idx,near_lon_era_idx],columns=["tmax"])
     tmin=pd.DataFrame(nc.variables["mn2t"][:,near_lat_era_idx,near_lon_era_idx],columns=["tmin"])
