@@ -13,7 +13,7 @@ https://confluence.ecmwf.int/display/WEBAPI/Accessing+ECMWF+data+servers+in+batc
 The script is written in Python 2.7 and has been tested on ArcGIS version 10.5
 If you have Python 3, then change put the parantheses after print command allover otherwise it will not run
 
-Last Edited-
+Last Edited- July 28, 2019
 """
 
 #############################################################################################################################
