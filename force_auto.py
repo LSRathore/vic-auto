@@ -53,7 +53,7 @@ e=math.ceil(desc.extent.XMax)
 
 area=str(n)+"/"+str(w)+"/"+str(s)+"/"+str(e)
 date_era=start_time+"/to/"+end_time
-name_era_nc_file="force_auto_era_"+start_time[:4]+"_"+end_time[:4]+"_5km.nc"
+name_era_nc_file="force_india_era_"+start_time[:4]+"_"+end_time[:4]+"_25km.nc"
 server = ECMWFDataServer()
 ##CODE FOR FORECAST
 
@@ -79,7 +79,7 @@ server.retrieve({
 })
 
 print "Downloaded the weather data, a netcdf file has been generated in the worskpace specified...\n"
-nc=Dataset('M:\\rathore\\vic20km\\force\\force_auto_era_1979_2017_5km.nc')
+nc=Dataset(name_era_nc_file)
 lat=list(nc.variables['latitude'][:])
 lon=list(nc.variables['longitude'][:])
 
@@ -98,7 +98,6 @@ fish="fishnet.shp"
 print "Making fishnet... \n"
 arcpy.CreateFishnet_management(fish,origin, y_axis, str(cell_h),str(cell_w), "0", "0", opposite, "LABELS",geometry_type="POLYGON")
 
-
 arcpy.AddGeometryAttributes_management(fish,"CENTROID")
 cursor=arcpy.da.SearchCursor(fish,["FID","CENTROID_Y","CENTROID_X"])
 l=[1,2,3]
@@ -109,7 +108,7 @@ for row in cursor:
 ll=pd.DataFrame(l)
 ll.columns=['fid','lat','lon']
 ll=ll.iloc[1:,:]
-
+ll=ll.round(decimal_pts)
 print "Generating forcing files in a folder named force_auto_files...\n"
 print "Columns of forcing files: Rainfall(m), Windspeed(m/s), Max Temperature and Minimum Temperature (C)...\n"
 
@@ -130,8 +129,7 @@ for i in range(len(ll)):
     tmin=tmin-273
     final=pd.concat((tp,wind,tmax,tmin),axis=1)
     final=final.round(decimal_pts)
-    temp_name="%."+str(decimal_pts)+"f"
-    force_name="data_"+temp_name % latt + "_" + temp_name % lonn
+    force_name="data_"+"%.2f" %(latt)+"_"+"%.2f" %(lonn)
     final.to_csv(force_name,index=None, header=None, sep="\t")
 
 
