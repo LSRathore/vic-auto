@@ -25,17 +25,17 @@ import numpy as np
 ### Make sure, there is not any space in the file or folder name (use _ insted)
 
 
-workspace="G:\\Rathore\\hosein_rout\\new"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
-shape_file="G:\\Rathore\\hosein_rout\\shapfile\\shapfile\\2050724400.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
-dem="G:\\Rathore\\hosein_rout\\dem_new\\dem_full1.tif"                  #DEM "  "  "  "  "  "        "    "        "        "      "
-lulc="G:\\Rathore\\hosein_rout\\soil_lulc\\LuLc\\mashhad_lulc_newpro.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
-soil="G:\\Rathore\\hosein_rout\\soil_lulc\\soil\\mashhad-basin.HWSD.tif"   #SOIL Image  (To make soil parameter file)
+workspace="G:\\Rathore\\vic_auto5"          ## Put location a folder, all files will be saved in there (TIP: Create a fresh folder)
+shape_file="G:/Rathore/vic_auto7/shape_proj.shp"        #Shapefile of the basin area. Make sure its cordinates are GCS WGS 1984
+dem="G:/Rathore/vic_auto7/dem_extfill.tif"                  #DEM "  "  "  "  "  "        "    "        "        "      "
+lulc="G:/Rathore/swat_inp/soil_lulc/lulc.tif"          #LULC image of area  (TO MAKE VEG PARAMETER FILE)
+soil="G:/Rathore/vic_auto7/soil_sbeas.tif"   #SOIL Image  (To make soil parameter file)
 rooting_depth_csv="C:\\Python27\\ArcGIS10.5\\vic_auto\\RootingDepths.csv"  ##Root depth csv file, provided with the docs
 soil_appendix="C:\\Python27\\ArcGIS10.5\\vic_auto\\soil_appendix_3layer.xlsx"  ##Soil appendix, provied with docs
 
 ###Cell height and width in degree, Edit acc
-cell_h=0.1
-cell_w=0.1
+cell_h=0.05
+cell_w=0.05
 
 
 ##########################################################################################################################
@@ -250,9 +250,11 @@ if user==1:
     arcpy.TableToExcel_conversion("union_elebndlyr","temp_eb.xls")
 
     temp_eb=pd.read_excel("temp_eb.xls")
-    temp1=temp_eb[(temp_eb["run_grid"]==1) & (temp_eb["FID_ras2po"]>=0)]
-    temp2=temp1[["FID","FID_ras2po","FID_fishne","run_grid","MEAN_ELE",'gridcode']]
-    pivot=pd.pivot_table(temp2,index=["FID_fishne"],columns="gridcode",values="MEAN_ELE",aggfunc=np.mean,fill_value=0)
+    new_col_lower=[x.lower() for x in list(temp_eb.columns)]
+    temp_eb.columns=new_col_lower
+    temp1=temp_eb[(temp_eb["run_grid"]==1) & (temp_eb["fid_ras2po"]>=0)]
+    temp2=temp1[["fid","fid_ras2po","fid_fishne","run_grid","mean_ele",'gridcode']]
+    pivot=pd.pivot_table(temp2,index=["fid_fishne"],columns="gridcode",values="mean_ele",aggfunc=np.mean,fill_value=0)
 
     arcpy.TableToExcel_conversion("tab_area_eleband","tabulate_area_temp.xls")
     tab_area=pd.read_excel("tabulate_area_temp.xls")
