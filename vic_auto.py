@@ -248,7 +248,8 @@ if user==1:
     arcpy.CalculateField_management("union_elebndlyr",'union_elebnd.MEAN_ELE',"!ele_eachzonetab1:MEAN!","PYTHON")
     arcpy.RemoveJoin_management("union_elebndlyr")
     arcpy.TableToExcel_conversion("union_elebndlyr","temp_eb.xls")
-
+    
+    os.chdir(workspace)
     temp_eb=pd.read_excel("temp_eb.xls")
     new_col_lower=[x.lower() for x in list(temp_eb.columns)]
     temp_eb.columns=new_col_lower
