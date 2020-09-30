@@ -34,7 +34,7 @@ rooting_depth_csv="C:\\Python27\\ArcGIS10.5\\vic_auto\\RootingDepths.csv"  ##Roo
 soil_appendix="C:\\Python27\\ArcGIS10.5\\vic_auto\\soil_appendix_3layer.xlsx"  ##Soil appendix, provied with docs
 
 ###Cell height and width in degree, Edit acc
-cell_h=0.05
+cell_h=0.05    ### 5 km = 0.05 degree
 cell_w=0.05
 
 
