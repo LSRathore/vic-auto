@@ -1,6 +1,6 @@
 # vic-auto
 
-This python script generates soil parameter and vegetation parameter files for Variable Infiltration Capacity (VIC) Hydrologic Model. The script `vic_auto.py` also prepares the elevation/snow band file, if required.
+This python script `vic_auto.py` generates soil parameter and vegetation parameter files for Variable Infiltration Capacity (VIC) Hydrologic Model. The script also prepares the elevation/snow band file, if required.
 
 Use *force_auto.py* to generate forcing files. Necessary files have been provided with documents. 
 
