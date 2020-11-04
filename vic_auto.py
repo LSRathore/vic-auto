@@ -268,7 +268,7 @@ if user==1:
     pivot["new"]=list(pivot.index)
     dfm1=df_rand.merge(pivot)
     dfm2=pd.concat([dfm1,df_rand],axis=1)
-    dfm2=dfm2.iloc[:,:-1]
+    #dfm2=dfm2.iloc[:,:-1]
     dfm2.index=dfm2.new
     dfm2=dfm2.drop("new",axis=1)
     dfm2.to_csv("elebandfile_"+str(user_i),sep="\t",header=None)
